@@ -20,3 +20,4 @@ class Classifier(torch.nn.Module):
         self.max_seq_len = max_seq_len
         self.num_labels = num_labels
         self.gpu = gpu
+ '''
