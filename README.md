@@ -1,5 +1,5 @@
 # Transformer Viewer
-Simple visualization of transformer model
+Simple visualization of pytorch model, Test version for classification task
 
 # Requirments
 python > 3.6  
