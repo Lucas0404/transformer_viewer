@@ -1,15 +1,16 @@
 # Transformer Viewer
-Simple visualization for pytorch model, Test version for classification task
+Simple visualization for pytorch model, Test version for classification task  
+Implementation of paper:   [Axiomatic Attribution for Deep Networks](https://arxiv.org/abs/1703.01365)
 
-# Requirments
-python > 3.6  
-pytorch > 1.4  
-Colr > 0.9  
+## Requirments:
+* python > 3.6  
+* pytorch > 1.4  
+* Colr > 0.9  
 
-# Installation
+## Installation:
     pip install transformer_viewer
 
-# How to use
+## How to use:
 ```python
 import torch
 import json
@@ -46,3 +47,20 @@ viewer.view("郭晶晶 曾 撮合 吴敏霞 与 章子怡 前男友 ， 拒绝 �
 ```
 ![wrong example](./img/wrong.png)
 
+## Parameters:
+### Glimplse(model, embed_name, id2word, id2label, tokenizer, special_tokens, loss_pos=None, step=20)
+parameter|type|description|example
+---|:--:|:--:|---:
+model|object|pytorch model|
+embed_name|str|name of the embedding layer|'embeddings'
+id2word|dict|from id to token|{1: '你好'， 2, '再见'}
+id2label|dict|from id to label|{1: 'sports'， 2, 'travel'}
+tokenizer|function|which can convert a text to a index list|split
+special_tokens|list|ids of the specical tokens|[1, 2]
+loss_pos|int|position of loss for the output of model|0
+
+### view(text, label)
+parameter|type|description|example
+---|:--:|:--:|---:
+text|str|input text|'我 爱 中国'
+label|int or str||'car'
