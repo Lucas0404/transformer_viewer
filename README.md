@@ -35,14 +35,14 @@ viewer = Glimpse(model, "embeddings", id2word, id2label, tokenizer, special_toke
 
 viewer.color_bar()
 ```
-![color bar](./img/color_bar.png)
+![color bar](./img/bar.png)
 
 ```python
 viewer.view("乌鲁木齐市 新增 一处 城市 中心 旅游 目的地", "travel")
 ```
-![color bar](./img/true.png)
+![true example](./img/true.png)
 ```python
 viewer.view("郭晶晶 曾 撮合 吴敏霞 与 章子怡 前男友 ， 拒绝 豪门 平淡 才 是 真", "sports")
 ```
-![color bar](./img/wrong.png)
+![wrong example](./img/wrong.png)
 
