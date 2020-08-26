@@ -12,27 +12,62 @@ Implementation of paper:   [Axiomatic Attribution for Deep Networks](https://arx
 
 ## How to use:
 ```python
+import numpy as np
 import torch
 import json
 
+from transformers import *
 from transformer_viewer import Glimpse
 
 
 # Load dict
-with open(PATH_ID2LABEL) as infile: id2label = json.load(infile)
-with open(PATH_ID2WORD) as infile: id2word = json.load(infile)
-word2id = dict()
-for k, v in id2word.items():
-    word2id[int(v)] = k
+with open(PATH_ID2LABEL) as infile: idx_label_map = json.load(infile)
 
 # Load model
-model = MyModel(*args, **kwargs)
-model.load_state_dict(torch.load(PATH_MODEL))
+if torch.cuda.is_available():
+    device = torch.device('cuda')
+else:
+    device = torch.device('cpu')
+        
+tokenizer = BertTokenizer.from_pretrained(MODEL_PATH)
+model = BertForSequenceClassification.from_pretrained(MODEL_PATH, num_labels=len(idx_label_map))
 
-tokenizer = lambda text: [int(word2id[item]) for item in text.split(" ")]
-special_tokens = [1, 2] # 1 for <eos>, 2 for <pad>
+def adaptor_embed(model, sign):
+    if sign == 'value':
+        return model.bert.embeddings.word_embeddings.weight.data
+    elif sign == 'grad':
+        return model.bert.embeddings.word_embeddings.weight.grad
+    else:
+        pass
 
-viewer = Glimpse(model, "embeddings", id2word, id2label, tokenizer, special_tokens, loss_pos=0)
+def adaptor_model(text, model, tokenizer, device, label=None):
+    _input = tokenizer(
+                  text = text,
+                  add_special_tokens=True,
+                  return_tensors="pt"
+             )
+    _input.to(device=device)
+    
+
+    if label is None:
+        with torch.no_grad():
+            outputs = model(**_input)
+
+            logits = outputs[0]
+            logits = logits.cpu().detach().numpy()
+
+            label_id = np.argmax(logits, axis=1)
+
+            return _input["input_ids"], label_id
+    else:
+        _input["labels"] = torch.tensor(label).to(device, dtype=torch.long)
+
+        outputs = model(**_input)
+        loss = outputs[0]
+
+        return loss
+
+viewer = Glimpse(model, tokenizer, adaptor_embed, adaptor_model, device, spliter=' ', id2label=idx_label_map)
 
 viewer.color_bar()
 ```
@@ -48,16 +83,16 @@ viewer.view("郭晶晶 曾 撮合 吴敏霞 与 章子怡 前男友 ， 拒绝 �
 ![wrong example](./img/wrong.png)
 
 ## Parameters:
-### Glimplse(model, embed_name, id2word, id2label, tokenizer, special_tokens, loss_pos=None, step=20)
+### Glimplse(model, tokenizer, adaptor_embed, adaptor_model, device, spliter=' ', id2label=None, step=20)
 parameter|type|description|example
 ---|:--:|:--:|---:
-model|object|pytorch model|
-embed_name|str|name of the embedding layer|'embeddings'
-id2word|dict|from id to token|{1: '你好'， 2, '再见'}
-id2label|dict|from id to label|{1: 'sports'， 2, 'travel'}
-tokenizer|function|which can convert a text to a index list|split
-special_tokens|list|ids of the specical tokens|[1, 2]
-loss_pos|int|position of loss for the output of model|0
+model|object|pytorch model|Bert
+tokenizer|transformers tokenizer||BertTokenizer
+adaptor_embed|func|extract embedding and grad|see example
+adaptor_model|func|output loss target and label from different model|see example
+device|torch device||see example
+spliter|str|how to connect tokens|' ' for english " for chinese
+id2label|dict|mapping from id to label|{0:'sports'}
 
 ### view(text, label)
 parameter|type|description|example
